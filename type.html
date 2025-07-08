@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英文字母打字练习游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 90%;
+            max-width: 700px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        h1 {
+            color: #3a4f63;
+            margin-bottom: 25px;
+            font-size: 2.2rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .game-area {
+            margin: 25px auto;
+            position: relative;
+            height: 350px;
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #e0f7fa 0%, #b2ebf2 100%);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .letter {
+            position: absolute;
+            font-size: 36px;
+            font-weight: bold;
+            animation: fall linear;
+            opacity: 0;
+            color: #2c3e50;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, opacity 0.3s ease;
+        }
+        
+        .letter.hit {
+            transform: scale(1.5);
+            opacity: 0 !important;
+            color: #27ae60;
+        }
+        
+        @keyframes fall {
+            0% { 
+                top: -60px; 
+                opacity: 0; 
+                transform: scale(0.8) rotate(-5deg); 
+            }
+            10% { 
+                opacity: 1; 
+                transform: scale(1) rotate(0deg); 
+            }
+            90% { 
+                opacity: 1; 
+                transform: scale(1) rotate(0deg); 
+            }
+            100% { 
+                top: 320px; 
+                opacity: 0.7; 
+                transform: scale(0.9) rotate(5deg); 
+            }
+        }
+        
+        .controls {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stats {
+            margin: 25px 0;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            gap: 15px;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 15px;
+            flex: 1;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-box:hover {
+            transform: translateY(-3px);
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .level-controls, .device-controls {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 12px;
+        }
+        
+        .level-btn, .device-btn {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            font-size: 14px;
+            padding: 8px 15px;
+            font-weight: normal;
+            opacity: 0.8;
+        }
+        
+        .level-btn.active, .device-btn.active {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+            transform: scale(1.05);
+            opacity: 1;
+        }
+        
+        .instructions {
+            margin-top: 25px;
+            text-align: left;
+            font-size: 14px;
+            color: #555;
+            background-color: rgba(236, 240, 241, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .instructions h3 {
+            color: #3a4f63;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            margin-top: 8px;
+        }
+        
+        .instructions li {
+            margin-bottom: 5px;
+        }
+        
+        /* 移动设备虚拟键盘 */
+        .virtual-keyboard {
+            display: none;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 600px;
+            user-select: none;
+        }
+        
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        
+        .key {
+            font-size: 18px;
+            min-width: 40px;
+            height: 40px;
+            margin: 2px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .key:active, .key.active {
+            transform: translateY(2px);
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+        
+        /* 响应式设计改进 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+                width: 95%;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .game-area {
+                height: 280px;
+            }
+            
+            .letter {
+                font-size: 28px;
+                width: 50px;
+                height: 50px;
+            }
+            
+            .level-controls, .device-controls {
+                flex-wrap: wrap;
+            }
+            
+            .stats {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .stat-box {
+                min-width: 100px;
+            }
+            
+            .key {
+                min-width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px 10px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 15px;
+            }
+            
+            .game-area {
+                height: 240px;
+                margin: 15px auto;
+            }
+            
+            .letter {
+                font-size: 24px;
+                width: 40px;
+                height: 40px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            button {
+                width: 100%;
+                padding: 10px 15px;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .key {
+                min-width: 28px;
+                height: 28px;
+                font-size: 14px;
+                margin: 1px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>英文字母打字练习游戏</h1>
+        
+        <div class="device-controls">
+            <button class="device-btn active" data-device="desktop">电脑</button>
+            <button class="device-btn" data-device="tablet">平板</button>
+            <button class="device-btn" data-device="mobile">手机</button>
+        </div>
+        
+        <div class="level-controls">
+            <button class="level-btn active" data-level="easy">简单</button>
+            <button class="level-btn" data-level="medium">中等</button>
+            <button class="level-btn" data-level="hard">困难</button>
+        </div>
+        
+        <div class="game-area" id="gameArea"></div>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">得分</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">错误</div>
+                <div class="stat-value" id="errors">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">准确率</div>
+                <div class="stat-value"><span id="accuracy">100</span>%</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">开始游戏</button>
+            <button id="resetBtn">重置游戏</button>
+        </div>
+        
+        <!-- 移动设备虚拟键盘 -->
+        <div class="virtual-keyboard" id="virtualKeyboard">
+            <!-- 键盘将通过JS动态生成 -->
+        </div>
+        
+        <div class="instructions">
+            <h3>游戏说明:</h3>
+            <p>当字母从屏幕顶部落下时，请按下对应的键盘按键。越快越好!</p>
+            <h3>难度级别:</h3>
+            <ul>
+                <li>简单: 只有小写字母 a-z</li>
+                <li>中等: 小写和大写字母 a-z, A-Z</li>
+                <li>困难: 字母, 数字和特殊符号</li>
+            </ul>
+            <h3>设备选择:</h3>
+            <ul>
+                <li>电脑: 使用实体键盘输入</li>
+                <li>平板/手机: 使用屏幕虚拟键盘输入</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const gameArea = document.getElementById('gameArea');
+            const startBtn = document.getElementById('startBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const scoreElement = document.getElementById('score');
+            const errorsElement = document.getElementById('errors');
+            const accuracyElement = document.getElementById('accuracy');
+            const levelButtons = document.querySelectorAll('.level-btn');
+            const deviceButtons = document.querySelectorAll('.device-btn');
+            const virtualKeyboard = document.getElementById('virtualKeyboard');
+            
+            let isGameRunning = false;
+            let gameInterval;
+            let score = 0;
+            let errors = 0;
+            let totalAttempts = 0;
+            let activeLetters = [];
+            let currentLevel = 'easy';
+            let currentDevice = 'desktop';
+            
+            // 字符集定义
+            const charSets = {
+                easy: 'abcdefghijklmnopqrstuvwxyz',
+                medium: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                hard: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?'
+            };
+            
+            // 游戏配置
+            const config = {
+                easy: { 
+                    desktop: { interval: 1600, speed: 7 },
+                    tablet: { interval: 1800, speed: 7.5 },
+                    mobile: { interval: 2000, speed: 8 }
+                },
+                medium: { 
+                    desktop: { interval: 1300, speed: 5.5 },
+                    tablet: { interval: 1500, speed: 6 },
+                    mobile: { interval: 1700, speed: 6.5 }
+                },
+                hard: { 
+                    desktop: { interval: 1100, speed: 4.5 },
+                    tablet: { interval: 1300, speed: 5 },
+                    mobile: { interval: 1500, speed: 5.5 }
+                }
+            };
+            
+            // 创建虚拟键盘
+            function createVirtualKeyboard() {
+                virtualKeyboard.innerHTML = '';
+                
+                const keyboardLayouts = {
+                    easy: [
+                        ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+                        ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+                        ['z', 'x', 'c', 'v', 'b', 'n', 'm']
+                    ],
+                    medium: [
+                        ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+                        ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+                        ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
+                        ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+                        ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+                        ['z', 'x', 'c', 'v', 'b', 'n', 'm']
+                    ],
+                    hard: [
+                        ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+                        ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+                        ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+                        ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
+                        ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+                        ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+                        ['z', 'x', 'c', 'v', 'b', 'n', 'm'],
+                        ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')']
+                    ]
+                };
+                
+                const currentLayout = keyboardLayouts[currentLevel];
+                
+                currentLayout.forEach(row => {
+                    const rowElement = document.createElement('div');
+                    rowElement.className = 'keyboard-row';
+                    
+                    row.forEach(key => {
+                        const keyElement = document.createElement('div');
+                        keyElement.className = 'key';
+                        keyElement.textContent = key;
+                        keyElement.setAttribute('data-key', key);
+                        
+                        keyElement.addEventListener('click', function() {
+                            if (!isGameRunning) return;
+                            
+                            // 添加按键动画
+                            this.classList.add('active');
+                            setTimeout(() => {
+                                this.classList.remove('active');
+                            }, 200);
+                            
+                            // 触发字母点击
+                            handleKeyPress(key);
+                        });
+                        
+                        rowElement.appendChild(keyElement);
+                    });
+                    
+                    virtualKeyboard.appendChild(rowElement);
+                });
+            }
+            
+            // 设置设备类型
+            deviceButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    if (isGameRunning) return;
+                    
+                    deviceButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    currentDevice = this.dataset.device;
+                    
+                    // 根据设备类型显示/隐藏虚拟键盘
+                    if (currentDevice === 'desktop') {
+                        virtualKeyboard.style.display = 'none';
+                    } else {
+                        virtualKeyboard.style.display = 'flex';
+                        createVirtualKeyboard();
+                    }
+                    
+                    // 更新游戏区域高度
+                    updateGameAreaForDevice();
+                });
+            });
+            
+            // 根据设备调整游戏区域
+            function updateGameAreaForDevice() {
+                if (currentDevice === 'mobile') {
+                    gameArea.style.height = '200px';
+                } else if (currentDevice === 'tablet') {
+                    gameArea.style.height = '250px';
+                } else {
+                    gameArea.style.height = '350px';
+                }
+            }
+            
+            // 设置难度级别
+            levelButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    if (isGameRunning) return;
+                    
+                    levelButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    currentLevel = this.dataset.level;
+                    
+                    // 如果是移动设备，更新虚拟键盘
+                    if (currentDevice !== 'desktop') {
+                        createVirtualKeyboard();
+                    }
+                });
+            });
+            
+            // 处理按键/点击事件
+            function handleKeyPress(key) {
+                if (!isGameRunning) return;
+                
+                let letterFound = false;
+                
+                for (let i = 0; i < activeLetters.length; i++) {
+                    const letterObj = activeLetters[i];
+                    if (letterObj.letter === key) {
+                        letterFound = true;
+                        activeLetters.splice(i, 1);
+                        
+                        // 添加击中动画
+                        letterObj.element.classList.add('hit');
+                        
+                        setTimeout(() => {
+                            if (gameArea.contains(letterObj.element)) {
+                                gameArea.removeChild(letterObj.element);
+                            }
+                        }, 300);
+                        
+                        score++;
+                        totalAttempts++;
+                        updateStats();
+                        break;
+                    }
+                }
+                
+                if (!letterFound && charSets[currentLevel].includes(key)) {
+                    errors++;
+                    totalAttempts++;
+                    updateStats();
+                    
+                    // 错误时的视觉反馈
+                    gameArea.style.boxShadow = 'inset 0 0 15px rgba(231, 76, 60, 0.3)';
+                    setTimeout(() => {
+                        gameArea.style.boxShadow = 'inset 0 0 15px rgba(0, 0, 0, 0.05)';
+                    }, 300);
+                }
+            }
+            
+            // 开始游戏
+            startBtn.addEventListener('click', function() {
+                if (isGameRunning) return;
+                
+                startBtn.textContent = '游戏进行中...';
+                startBtn.style.opacity = '0.7';
+                
+                isGameRunning = true;
+                score = 0;
+                errors = 0;
+                totalAttempts = 0;
+                updateStats();
+                
+                // 根据当前设备和难度级别设置游戏参数
+                const currentConfig = config[currentLevel][currentDevice];
+                
+                gameInterval = setInterval(() => {
+                    createLetter();
+                }, currentConfig.interval);
+            });
+            
+            // 重置游戏
+            resetBtn.addEventListener('click', function() {
+                resetGame();
+                
+                // 添加按钮动画效果
+                resetBtn.classList.add('clicked');
+                setTimeout(() => {
+                    resetBtn.classList.remove('clicked');
+                }, 300);
+            });
+            
+            // 监听键盘输入
+            document.addEventListener('keydown', function(event) {
+                if (!isGameRunning) return;
+                
+                const key = event.key;
+                handleKeyPress(key);
+            });
+            
+            // 创建字母
+            function createLetter() {
+                if (!isGameRunning) return;
+                
+                const chars = charSets[currentLevel];
+                const randomChar = chars.charAt(Math.floor(Math.random() * chars.length));
+                const letterElement = document.createElement('div');
+                letterElement.className = 'letter';
+                letterElement.textContent = randomChar;
+                
+                // 根据当前游戏区域大小调整
+                const areaWidth = gameArea.offsetWidth;
+                const areaHeight = gameArea.offsetHeight;
+                
+                // 随机水平位置 (保持字母在视窗内)
+                const xPos = Math.floor(Math.random() * (areaWidth - 70));
+                letterElement.style.left = `${xPos + 5}px`;
+                
+                // 设置下落动画
+                const currentConfig = config[currentLevel][currentDevice];
+                const duration = currentConfig.speed;
+                
+                // 调整动画以适应不同高度
+                letterElement.style.animation = `none`;
+                setTimeout(() => {
+                    letterElement.style.animation = `fall ${duration}s cubic-bezier(0.25, 0.1, 0.25, 1)`;
+                }, 10);
+                
+                // 设置终点位置
+                letterElement.addEventListener('animationstart', () => {
+                    letterElement.style.animationName = 'fall';
+                    // 设置动画结束位置为区域高度减去字母高度
+                    const keyframes = `
+                        @keyframes fall {
+                            0% { top: -60px; opacity: 0; transform: scale(0.8) rotate(-5deg); }
+                            10% { opacity: 1; transform: scale(1) rotate(0deg); }
+                            90% { opacity: 1; transform: scale(1) rotate(0deg); }
+                            100% { top: ${areaHeight - 60}px; opacity: 0.7; transform: scale(0.9) rotate(5deg); }
+                        }
+                    `;
+                    
+                    // 添加样式
+                    const styleElement = document.createElement('style');
+                    styleElement.textContent = keyframes;
+                    document.head.appendChild(styleElement);
+                    
+                    // 清理样式元素
+                    setTimeout(() => {
+                        document.head.removeChild(styleElement);
+                    }, duration * 1000);
+                });
+                
+                // 添加到游戏区域
+                gameArea.appendChild(letterElement);
+                
+                // 添加到活动字母列表
+                const letterObj = {
+                    letter: randomChar,
+                    element: letterElement
+                };
+                activeLetters.push(letterObj);
+                
+                // 当字母到达底部时
+                letterElement.addEventListener('animationend', function() {
+                    if (isGameRunning && gameArea.contains(letterElement)) {
+                        errors++;
+                        totalAttempts++;
+                        updateStats();
+                        
+                        // 找到并移除对应的字母对象
+                        const index = activeLetters.findIndex(l => l.element === letterElement);
+                        if (index !== -1) {
+                            activeLetters.splice(index, 1);
+                        }
+                        gameArea.removeChild(letterElement);
+                    }
+                });
+            }
+            
+            // 更新统计数据
+            function updateStats() {
+                scoreElement.textContent = score;
+                errorsElement.textContent = errors;
+                
+                // 计算准确率
+                const accuracy = totalAttempts > 0 ? Math.round((score / totalAttempts) * 100) : 100;
+                accuracyElement.textContent = accuracy;
+                
+                // 根据准确率更改颜色
+                let accuracyColor = '#27ae60'; // 绿色 (好)
+                if (accuracy < 70) {
+                    accuracyColor = '#e74c3c'; // 红色 (差)
+                } else if (accuracy < 90) {
+                    accuracyColor = '#f39c12'; // 橙色 (一般)
+                }
+                accuracyElement.style.color = accuracyColor;
+            }
+            
+            // 重置游戏
+            function resetGame() {
+                isGameRunning = false;
+                clearInterval(gameInterval);
+                
+                // 清除所有活动字母
+                activeLetters.forEach(letterObj => {
+                    if (gameArea.contains(letterObj.element)) {
+                        gameArea.removeChild(letterObj.element);
+                    }
+                });
+                activeLetters = [];
+                
+                // 重置统计
+                score = 0;
+                errors = 0;
+                totalAttempts = 0;
+                updateStats();
+                
+                // 重置按钮文本
+                startBtn.textContent = '开始游戏';
+                startBtn.style.opacity = '1';
+                
+                // 重置游戏区域样式
+                gameArea.style.boxShadow = 'inset 0 0 15px rgba(0, 0, 0, 0.05)';
+            }
+            
+            // 初始化
+            if (window.innerWidth <= 768) {
+                // 如果是小屏幕设备，自动选择移动设备模式
+                deviceButtons.forEach(btn => btn.classList.remove('active'));
+                const mobileBtn = document.querySelector('[data-device="mobile"]');
+                if (mobileBtn) {
+                    mobileBtn.classList.add('active');
+                    currentDevice = 'mobile';
+                }
+                virtualKeyboard.style.display = 'flex';
+                createVirtualKeyboard();
+                updateGameAreaForDevice();
+            }
+        });
+    </script>
+</body>
+</html>

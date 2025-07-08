@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片转Base64编码工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            min-height: 600px;
+        }
+
+        .title {
+            text-align: center;
+            color: #333;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .mode-switch {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 15px;
+            padding: 8px;
+            gap: 8px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: transparent;
+            color: #667eea;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: linear-gradient(45deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 0.9em;
+            color: #999;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .preview-section {
+            display: none;
+            margin-bottom: 30px;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            display: block;
+        }
+
+        .file-info {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .decode-section {
+            display: none;
+        }
+
+        .decode-input-options {
+            margin-bottom: 20px;
+        }
+
+        .input-method-switch {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 12px;
+            padding: 6px;
+            gap: 6px;
+        }
+
+        .method-btn {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: transparent;
+            color: #FF6B6B;
+        }
+
+        .method-btn.active {
+            background: linear-gradient(135deg, #FF6B6B, #4ECDC4);
+            color: white;
+            box-shadow: 0 3px 10px rgba(255, 107, 107, 0.3);
+        }
+
+        .txt-upload-area {
+            border: 3px dashed #FF6B6B;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: linear-gradient(45deg, rgba(255, 107, 107, 0.05), rgba(78, 205, 196, 0.05));
+        }
+
+        .txt-upload-area:hover {
+            border-color: #4ECDC4;
+            background: linear-gradient(45deg, rgba(255, 107, 107, 0.1), rgba(78, 205, 196, 0.1));
+            transform: translateY(-2px);
+        }
+
+        .txt-upload-area.dragover {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .uploaded-file-info {
+            background: rgba(255, 107, 107, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .decode-textarea {
+            width: 100%;
+            height: 150px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+            background: #f9f9f9;
+            color: #333;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        .decode-button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #FF6B6B, #4ECDC4);
+            color: white;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .decode-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .decoded-result {
+            display: none;
+            text-align: center;
+        }
+
+        .result-section {
+            display: none;
+        }
+
+        .result-textarea {
+            width: 100%;
+            height: 200px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+            background: #f9f9f9;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: all 0.3s ease;
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .title {
+                font-size: 2em;
+            }
+
+            .upload-area {
+                padding: 40px 15px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🖼️ 图片Base64编解码工具</h1>
+        
+        <!-- 模式切换 -->
+        <div class="mode-switch">
+            <button class="mode-btn active" id="encodeMode">🔒 图片转Base64</button>
+            <button class="mode-btn" id="decodeMode">🔓 Base64转图片</button>
+        </div>
+
+        <!-- 编码模式 -->
+        <div id="encodingSection">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">点击或拖拽图片到这里</div>
+                <div class="upload-hint">支持 JPG、PNG、GIF、WebP 格式</div>
+                <input type="file" class="file-input" id="fileInput" accept="image/*">
+            </div>
+
+            <div class="preview-section" id="previewSection">
+                <img class="image-preview" id="imagePreview" alt="预览图片">
+                <div class="file-info" id="fileInfo"></div>
+            </div>
+
+            <div class="result-section" id="resultSection">
+                <textarea class="result-textarea" id="resultTextarea" readonly placeholder="Base64编码结果将显示在这里..."></textarea>
+                <div class="button-group">
+                    <button class="btn btn-primary" id="copyBtn">📋 复制到剪贴板</button>
+                    <button class="btn btn-secondary" id="downloadBtn">💾 下载为TXT文件</button>
+                    <button class="btn btn-reset" id="resetBtn">🔄 重新选择</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 解码模式 -->
+        <div class="decode-section" id="decodingSection">
+            <div class="decode-input-options">
+                <div class="input-method-switch">
+                    <button class="method-btn active" id="pasteMethod">📝 粘贴输入</button>
+                    <button class="method-btn" id="uploadMethod">📁 上传TXT文件</button>
+                </div>
+                
+                <!-- 粘贴输入区域 -->
+                <div class="paste-input" id="pasteInput">
+                    <textarea class="decode-textarea" id="decodeTextarea" placeholder="请粘贴Base64编码到这里...&#10;&#10;例如：data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...&#10;或者：iVBORw0KGgoAAAANSUhEUgAA..."></textarea>
+                </div>
+                
+                <!-- 文件上传区域 -->
+                <div class="file-upload" id="fileUpload" style="display: none;">
+                    <div class="txt-upload-area" id="txtUploadArea">
+                        <div class="upload-icon">📄</div>
+                        <div class="upload-text">点击或拖拽TXT文件到这里</div>
+                        <div class="upload-hint">支持包含Base64编码的文本文件</div>
+                        <input type="file" class="file-input" id="txtFileInput" accept=".txt,.text">
+                    </div>
+                    <div class="uploaded-file-info" id="uploadedFileInfo" style="display: none;"></div>
+                </div>
+            </div>
+            
+            <button class="decode-button" id="decodeBtn">🔍 解码并显示图片</button>
+            
+            <div class="decoded-result" id="decodedResult">
+                <img class="decoded-image" id="decodedImage" alt="解码后的图片">
+                <div class="file-info" id="decodedInfo"></div>
+                <div class="button-group">
+                    <button class="btn btn-secondary" id="downloadImageBtn">💾 下载图片</button>
+                    <button class="btn btn-reset" id="resetDecodeBtn">🔄 重新解码</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        let currentBase64 = '';
+        let currentFileName = '';
+        let currentMode = 'encode';
+
+        // 获取元素
+        const encodeModeBtn = document.getElementById('encodeMode');
+        const decodeModeBtn = document.getElementById('decodeMode');
+        const encodingSection = document.getElementById('encodingSection');
+        const decodingSection = document.getElementById('decodingSection');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewSection = document.getElementById('previewSection');
+        const imagePreview = document.getElementById('imagePreview');
+        const fileInfo = document.getElementById('fileInfo');
+        const resultSection = document.getElementById('resultSection');
+        const resultTextarea = document.getElementById('resultTextarea');
+        const copyBtn = document.getElementById('copyBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const notification = document.getElementById('notification');
+        
+        // 解码相关元素
+        const pasteMethodBtn = document.getElementById('pasteMethod');
+        const uploadMethodBtn = document.getElementById('uploadMethod');
+        const pasteInput = document.getElementById('pasteInput');
+        const fileUpload = document.getElementById('fileUpload');
+        const txtUploadArea = document.getElementById('txtUploadArea');
+        const txtFileInput = document.getElementById('txtFileInput');
+        const uploadedFileInfo = document.getElementById('uploadedFileInfo');
+        const decodeTextarea = document.getElementById('decodeTextarea');
+        const decodeBtn = document.getElementById('decodeBtn');
+        const decodedResult = document.getElementById('decodedResult');
+        const decodedImage = document.getElementById('decodedImage');
+        const decodedInfo = document.getElementById('decodedInfo');
+        const downloadImageBtn = document.getElementById('downloadImageBtn');
+        const resetDecodeBtn = document.getElementById('resetDecodeBtn');
+
+        // 模式切换
+        encodeModeBtn.addEventListener('click', () => switchMode('encode'));
+        decodeModeBtn.addEventListener('click', () => switchMode('decode'));
+
+        // 解码输入方式切换
+        pasteMethodBtn.addEventListener('click', () => switchInputMethod('paste'));
+        uploadMethodBtn.addEventListener('click', () => switchInputMethod('upload'));
+
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            if (mode === 'encode') {
+                encodeModeBtn.classList.add('active');
+                decodeModeBtn.classList.remove('active');
+                encodingSection.style.display = 'block';
+                decodingSection.style.display = 'none';
+            } else {
+                decodeModeBtn.classList.add('active');
+                encodeModeBtn.classList.remove('active');
+                encodingSection.style.display = 'none';
+                decodingSection.style.display = 'block';
+            }
+        }
+
+        function switchInputMethod(method) {
+            if (method === 'paste') {
+                pasteMethodBtn.classList.add('active');
+                uploadMethodBtn.classList.remove('active');
+                pasteInput.style.display = 'block';
+                fileUpload.style.display = 'none';
+            } else {
+                uploadMethodBtn.classList.add('active');
+                pasteMethodBtn.classList.remove('active');
+                pasteInput.style.display = 'none';
+                fileUpload.style.display = 'block';
+            }
+        }
+
+        // 编码模式功能
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', handleFileSelect);
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showNotification('请选择有效的图片文件！', 'error');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showNotification('文件大小不能超过10MB！', 'error');
+                return;
+            }
+
+            currentFileName = file.name;
+            
+            const fileSize = (file.size / 1024).toFixed(2);
+            fileInfo.innerHTML = `
+                <strong>文件名：</strong>${file.name}<br>
+                <strong>文件大小：</strong>${fileSize} KB<br>
+                <strong>文件类型：</strong>${file.type}
+            `;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                previewSection.style.display = 'block';
+                convertToBase64(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function convertToBase64(dataUrl) {
+            currentBase64 = dataUrl;
+            resultTextarea.value = dataUrl;
+            resultSection.style.display = 'block';
+            
+            showNotification('Base64编码转换成功！', 'success');
+        }
+
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(currentBase64);
+                showNotification('Base64编码已复制到剪贴板！', 'success');
+            } catch (err) {
+                resultTextarea.select();
+                document.execCommand('copy');
+                showNotification('Base64编码已复制到剪贴板！', 'success');
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const blob = new Blob([currentBase64], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentFileName.split('.')[0]}_base64.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('Base64编码文件下载成功！', 'success');
+        });
+
+        resetBtn.addEventListener('click', () => {
+            fileInput.value = '';
+            previewSection.style.display = 'none';
+            resultSection.style.display = 'none';
+            currentBase64 = '';
+            currentFileName = '';
+            showNotification('已重置，可以选择新的图片！', 'success');
+        });
+
+        // 解码模式功能
+        
+        // TXT文件上传功能
+        txtUploadArea.addEventListener('click', () => {
+            txtFileInput.click();
+        });
+
+        txtFileInput.addEventListener('change', handleTxtFileSelect);
+
+        txtUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            txtUploadArea.classList.add('dragover');
+        });
+
+        txtUploadArea.addEventListener('dragleave', () => {
+            txtUploadArea.classList.remove('dragover');
+        });
+
+        txtUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            txtUploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleTxtFile(files[0]);
+            }
+        });
+
+        function handleTxtFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleTxtFile(file);
+            }
+        }
+
+        function handleTxtFile(file) {
+            // 验证文件类型
+            if (!file.name.toLowerCase().endsWith('.txt') && !file.name.toLowerCase().endsWith('.text')) {
+                showNotification('请选择TXT文本文件！', 'error');
+                return;
+            }
+
+            // 验证文件大小 (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showNotification('文件大小不能超过5MB！', 'error');
+                return;
+            }
+
+            const fileSize = (file.size / 1024).toFixed(2);
+            uploadedFileInfo.innerHTML = `
+                <strong>文件名：</strong>${file.name}<br>
+                <strong>文件大小：</strong>${fileSize} KB<br>
+                <strong>状态：</strong>已上传，点击解码按钮开始处理
+            `;
+            uploadedFileInfo.style.display = 'block';
+
+            // 读取文件内容
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                // 将内容放入textarea以便后续处理
+                decodeTextarea.value = content.trim();
+                showNotification('TXT文件上传成功！', 'success');
+            };
+            reader.onerror = function() {
+                showNotification('文件读取失败！', 'error');
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        // Base64解码功能
+        decodeBtn.addEventListener('click', () => {
+            const base64Input = decodeTextarea.value.trim();
+            
+            if (!base64Input) {
+                showNotification('请输入Base64编码！', 'error');
+                return;
+            }
+
+            try {
+                let base64Data = base64Input;
+                let mimeType = '';
+                
+                // 检查是否包含data URL前缀
+                if (base64Input.startsWith('data:image/')) {
+                    const matches = base64Input.match(/^data:(image\/[^;]+);base64,(.+)$/);
+                    if (matches) {
+                        mimeType = matches[1];
+                        base64Data = matches[2];
+                    } else {
+                        throw new Error('无效的data URL格式');
+                    }
+                } else {
+                    // 尝试检测图片类型
+                    if (base64Input.startsWith('/9j/')) {
+                        mimeType = 'image/jpeg';
+                    } else if (base64Input.startsWith('iVBORw0KGgo')) {
+                        mimeType = 'image/png';
+                    } else if (base64Input.startsWith('R0lGODlh')) {
+                        mimeType = 'image/gif';
+                    } else if (base64Input.startsWith('UklGR')) {
+                        mimeType = 'image/webp';
+                    } else {
+                        mimeType = 'image/png'; // 默认为PNG
+                    }
+                    base64Data = base64Input;
+                }
+
+                // 验证Base64格式
+                try {
+                    atob(base64Data);
+                } catch (e) {
+                    throw new Error('无效的Base64编码格式');
+                }
+
+                // 创建图片URL
+                const fullDataUrl = `data:${mimeType};base64,${base64Data}`;
+                
+                // 显示解码结果
+                decodedImage.src = fullDataUrl;
+                decodedImage.onload = () => {
+                    // 估算文件大小
+                    const estimatedSize = Math.round((base64Data.length * 3) / 4 / 1024);
+                    
+                    decodedInfo.innerHTML = `
+                        <strong>图片类型：</strong>${mimeType}<br>
+                        <strong>估算大小：</strong>${estimatedSize} KB<br>
+                        <strong>图片尺寸：</strong>${decodedImage.naturalWidth} × ${decodedImage.naturalHeight}
+                    `;
+                    
+                    decodedResult.style.display = 'block';
+                    showNotification('Base64解码成功！', 'success');
+                };
+                
+                decodedImage.onerror = () => {
+                    throw new Error('无法解码为有效图片');
+                };
+
+                // 保存当前解码的数据
+                currentBase64 = fullDataUrl;
+                currentFileName = `decoded_image.${mimeType.split('/')[1]}`;
+                
+            } catch (error) {
+                showNotification(`解码失败：${error.message}`, 'error');
+            }
+        });
+
+        downloadImageBtn.addEventListener('click', () => {
+            if (!currentBase64) return;
+            
+            const a = document.createElement('a');
+            a.href = currentBase64;
+            a.download = currentFileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            showNotification('图片下载成功！', 'success');
+        });
+
+        resetDecodeBtn.addEventListener('click', () => {
+            decodeTextarea.value = '';
+            decodedResult.style.display = 'none';
+            uploadedFileInfo.style.display = 'none';
+            txtFileInput.value = '';
+            currentBase64 = '';
+            currentFileName = '';
+            showNotification('已重置，可以输入新的Base64编码！', 'success');
+        });
+
+        function showNotification(message, type) {
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

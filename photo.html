@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hilbert曲线图片加密解密器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .section h2 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+        }
+
+        .upload-area.dragover {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .image-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .image-box {
+            flex: 1;
+            min-width: 300px;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .image-box h3 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .image-box canvas {
+            max-width: 100%;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #dc3545;
+        }
+
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Hilbert曲线图片加密解密器</h1>
+        
+        <div class="info">
+            <strong>使用说明：</strong><br>
+            1. 选择要加密的图片文件（支持 PNG, JPG, JPEG 格式）<br>
+            2. 选择输出分辨率：1080P(快速)、2K(平衡)、4K(最高画质)或自适应<br>
+            3. 点击"加密图片"按钮进行加密<br>
+            4. 下载指定分辨率的图片文件<br>
+            5. 要解密时，上传加密后的图片，点击"解密图片"按钮
+        </div>
+
+        <div class="section">
+            <h2>📁 选择图片</h2>
+            <div class="upload-area" id="uploadArea">
+                <p>点击这里选择图片文件<br>或拖拽图片到此区域</p>
+                <input type="file" id="imageInput" accept="image/*">
+            </div>
+            <div class="status" id="status"></div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 操作控制</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="resolutionSelect" style="display: block; margin-bottom: 10px; font-weight: bold; color: #495057;">
+                    📐 选择输出分辨率：
+                </label>
+                <select id="resolutionSelect" style="padding: 10px 15px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 1em; background: white; cursor: pointer; width: 250px;">
+                    <option value="1080">1080P (1920x1080) - 快速处理</option>
+                    <option value="2048">2K (2048x2048) - 平衡画质</option>
+                    <option value="4096" selected>4K (4096x4096) - 最高画质</option>
+                    <option value="auto">自适应 - 根据原图自动选择</option>
+                </select>
+            </div>
+            
+            <button class="btn" id="encryptBtn" disabled>🔒 加密图片</button>
+            <button class="btn" id="decryptBtn" disabled>🔓 解密图片</button>
+            <button class="btn" id="downloadBtn" disabled>💾 下载图片</button>
+            
+            <div class="progress" id="progressContainer" style="display: none;">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div class="info" style="margin-top: 15px; font-size: 0.9em;">
+                <strong>分辨率说明：</strong><br>
+                • <strong>1080P</strong>: 适合快速处理，文件小(~5MB)<br>
+                • <strong>2K</strong>: 平衡画质和处理速度(~15MB)<br>
+                • <strong>4K</strong>: 最高画质，处理时间较长(~30MB)<br>
+                • <strong>自适应</strong>: 根据原图尺寸自动选择最佳分辨率
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🖼️ 图片预览</h2>
+            <div class="image-container">
+                <div class="image-box">
+                    <h3>原始图片</h3>
+                    <canvas id="originalCanvas"></canvas>
+                </div>
+                <div class="image-box">
+                    <h3>处理后图片</h3>
+                    <canvas id="processedCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class HilbertImageEncryptor {
+            constructor() {
+                this.originalCanvas = document.getElementById('originalCanvas');
+                this.processedCanvas = document.getElementById('processedCanvas');
+                this.originalCtx = this.originalCanvas.getContext('2d');
+                this.processedCtx = this.processedCanvas.getContext('2d');
+                this.currentImageData = null;
+                this.isEncrypted = false;
+                
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                const uploadArea = document.getElementById('uploadArea');
+                const imageInput = document.getElementById('imageInput');
+                const encryptBtn = document.getElementById('encryptBtn');
+                const decryptBtn = document.getElementById('decryptBtn');
+                const downloadBtn = document.getElementById('downloadBtn');
+
+                // 文件上传
+                uploadArea.addEventListener('click', () => imageInput.click());
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        this.handleFileSelect(files[0]);
+                    }
+                });
+
+                imageInput.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        this.handleFileSelect(e.target.files[0]);
+                    }
+                });
+
+                // 分辨率选择变化时重新处理图片
+                const resolutionSelect = document.getElementById('resolutionSelect');
+                resolutionSelect.addEventListener('change', () => {
+                    if (this.currentImageData && this.originalWidth && this.originalHeight) {
+                        // 重新创建图片对象并重新加载
+                        const img = new Image();
+                        img.onload = () => {
+                            this.loadImage(img);
+                        };
+                        // 从当前canvas获取图片数据
+                        img.src = this.originalCanvas.toDataURL();
+                    }
+                });
+                encryptBtn.addEventListener('click', () => this.encryptImage());
+                decryptBtn.addEventListener('click', () => this.decryptImage());
+                downloadBtn.addEventListener('click', () => this.downloadImage());
+            }
+
+            handleFileSelect(file) {
+                if (!file.type.startsWith('image/')) {
+                    this.showStatus('请选择有效的图片文件！', 'error');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        this.loadImage(img);
+                        this.showStatus('图片加载成功！', 'success');
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            loadImage(img) {
+                // 存储原始图片信息
+                this.originalWidth = img.width;
+                this.originalHeight = img.height;
+                
+                // 根据用户选择确定目标分辨率
+                const targetResolution = this.getTargetResolution();
+                const size = this.getNearestPowerOfTwo(Math.max(img.width, img.height), targetResolution);
+                
+                // 显示画布保持合理尺寸便于预览
+                const displaySize = Math.min(size, 400);
+                this.originalCanvas.style.width = displaySize + 'px';
+                this.originalCanvas.style.height = displaySize + 'px';
+                this.processedCanvas.style.width = displaySize + 'px';
+                this.processedCanvas.style.height = displaySize + 'px';
+
+                // 实际画布使用选定分辨率
+                this.originalCanvas.width = size;
+                this.originalCanvas.height = size;
+                this.processedCanvas.width = size;
+                this.processedCanvas.height = size;
+                this.canvasSize = size;
+
+                // 绘制高质量原始图片
+                this.originalCtx.fillStyle = 'white';
+                this.originalCtx.fillRect(0, 0, size, size);
+                
+                // 使用高质量缩放
+                this.originalCtx.imageSmoothingEnabled = true;
+                this.originalCtx.imageSmoothingQuality = 'high';
+                
+                const scale = Math.min(size / this.originalWidth, size / this.originalHeight);
+                const x = (size - this.originalWidth * scale) / 2;
+                const y = (size - this.originalHeight * scale) / 2;
+                
+                this.originalCtx.drawImage(img, x, y, this.originalWidth * scale, this.originalHeight * scale);
+                
+                this.currentImageData = this.originalCtx.getImageData(0, 0, size, size);
+                this.isEncrypted = false;
+
+                // 启用按钮
+                document.getElementById('encryptBtn').disabled = false;
+                document.getElementById('decryptBtn').disabled = false;
+                
+                const resolutionName = this.getResolutionName(size);
+                this.showStatus(`图片加载成功！输出分辨率: ${resolutionName} (${size}x${size}) | 原始: ${this.originalWidth}x${this.originalHeight}`, 'success');
+            }
+
+            getNearestPowerOfTwo(n, maxSize = null) {
+                let power = 1;
+                while (power < n) {
+                    power *= 2;
+                }
+                if (maxSize) {
+                    return Math.min(power, maxSize);
+                }
+                return power;
+            }
+
+            getTargetResolution() {
+                const select = document.getElementById('resolutionSelect');
+                const value = select.value;
+                
+                if (value === 'auto') {
+                    // 根据原图尺寸自动选择
+                    const maxDim = Math.max(this.originalWidth || 0, this.originalHeight || 0);
+                    if (maxDim <= 1920) return 2048;  // 2K for images up to 1080p
+                    if (maxDim <= 2560) return 2048;  // 2K for QHD
+                    return 4096;  // 4K for larger images
+                }
+                
+                return parseInt(value);
+            }
+
+            getResolutionName(size) {
+                switch(size) {
+                    case 1024: return '1080P';
+                    case 2048: return '2K';
+                    case 4096: return '4K';
+                    default: return `${size}x${size}`;
+                }
+            }
+
+            // 生成Hilbert曲线坐标序列
+            generateHilbertCurve(n) {
+                const points = [];
+                const total = n * n;
+                
+                for (let i = 0; i < total; i++) {
+                    const point = this.hilbertIndexToXY(i, n);
+                    points.push(point);
+                }
+                
+                return points;
+            }
+
+            // 将Hilbert曲线索引转换为坐标
+            hilbertIndexToXY(index, n) {
+                let x = 0, y = 0;
+                let t = index;
+                let s = 1;
+                
+                while (s < n) {
+                    const rx = 1 & (t / 2);
+                    const ry = 1 & (t ^ rx);
+                    
+                    if (ry === 0) {
+                        if (rx === 1) {
+                            x = s - 1 - x;
+                            y = s - 1 - y;
+                        }
+                        [x, y] = [y, x];
+                    }
+                    
+                    x += s * rx;
+                    y += s * ry;
+                    t = Math.floor(t / 4);
+                    s *= 2;
+                }
+                
+                return { x, y };
+            }
+
+            async encryptImage() {
+                if (!this.currentImageData) return;
+
+                this.showProgress(true);
+                this.showStatus('正在加密图片...', 'info');
+
+                const size = this.originalCanvas.width;
+                const imageData = new ImageData(
+                    new Uint8ClampedArray(this.currentImageData.data),
+                    size,
+                    size
+                );
+
+                // 生成Hilbert曲线路径
+                const hilbertPath = this.generateHilbertCurve(size);
+                
+                // 创建新的像素数据
+                const newData = new Uint8ClampedArray(imageData.data.length);
+                
+                // 使用Hilbert曲线重新排列像素
+                for (let i = 0; i < hilbertPath.length; i++) {
+                    const originalPoint = hilbertPath[i];
+                    const newPoint = hilbertPath[(i + Math.floor(hilbertPath.length / 3)) % hilbertPath.length];
+                    
+                    const originalIndex = (originalPoint.y * size + originalPoint.x) * 4;
+                    const newIndex = (newPoint.y * size + newPoint.x) * 4;
+                    
+                    newData[newIndex] = imageData.data[originalIndex];
+                    newData[newIndex + 1] = imageData.data[originalIndex + 1];
+                    newData[newIndex + 2] = imageData.data[originalIndex + 2];
+                    newData[newIndex + 3] = imageData.data[originalIndex + 3];
+                    
+                    if (i % 1000 === 0) {
+                        this.updateProgress((i / hilbertPath.length) * 100);
+                        await new Promise(resolve => setTimeout(resolve, 1));
+                    }
+                }
+
+                const encryptedImageData = new ImageData(newData, size, size);
+                this.processedCtx.putImageData(encryptedImageData, 0, 0);
+                
+                this.isEncrypted = true;
+                this.showProgress(false);
+                this.showStatus('图片加密完成！', 'success');
+                document.getElementById('downloadBtn').disabled = false;
+            }
+
+            async decryptImage() {
+                if (!this.currentImageData) return;
+
+                this.showProgress(true);
+                this.showStatus('正在解密图片...', 'info');
+
+                const size = this.originalCanvas.width;
+                const imageData = new ImageData(
+                    new Uint8ClampedArray(this.currentImageData.data),
+                    size,
+                    size
+                );
+
+                // 生成Hilbert曲线路径
+                const hilbertPath = this.generateHilbertCurve(size);
+                
+                // 创建新的像素数据
+                const newData = new Uint8ClampedArray(imageData.data.length);
+                
+                // 使用逆向的Hilbert曲线恢复像素
+                for (let i = 0; i < hilbertPath.length; i++) {
+                    const encryptedPoint = hilbertPath[(i + Math.floor(hilbertPath.length / 3)) % hilbertPath.length];
+                    const originalPoint = hilbertPath[i];
+                    
+                    const encryptedIndex = (encryptedPoint.y * size + encryptedPoint.x) * 4;
+                    const originalIndex = (originalPoint.y * size + originalPoint.x) * 4;
+                    
+                    newData[originalIndex] = imageData.data[encryptedIndex];
+                    newData[originalIndex + 1] = imageData.data[encryptedIndex + 1];
+                    newData[originalIndex + 2] = imageData.data[encryptedIndex + 2];
+                    newData[originalIndex + 3] = imageData.data[encryptedIndex + 3];
+                    
+                    if (i % 1000 === 0) {
+                        this.updateProgress((i / hilbertPath.length) * 100);
+                        await new Promise(resolve => setTimeout(resolve, 1));
+                    }
+                }
+
+                const decryptedImageData = new ImageData(newData, size, size);
+                this.processedCtx.putImageData(decryptedImageData, 0, 0);
+                
+                this.isEncrypted = false;
+                this.showProgress(false);
+                this.showStatus('图片解密完成！', 'success');
+                document.getElementById('downloadBtn').disabled = false;
+            }
+
+            downloadImage() {
+                const canvas = this.processedCanvas;
+                const link = document.createElement('a');
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+                const resolutionName = this.getResolutionName(this.canvasSize);
+                const prefix = this.isEncrypted ? 'encrypted' : 'decrypted';
+                const filename = `${prefix}_${resolutionName}_${timestamp}.png`;
+                
+                // 使用最高质量导出
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    link.href = url;
+                    link.download = filename;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    
+                    const sizeInMB = (blob.size / 1024 / 1024).toFixed(2);
+                    this.showStatus(`${resolutionName}图片已下载: ${filename} (${sizeInMB}MB)`, 'success');
+                }, 'image/png', 1.0); // 使用PNG格式和最高质量
+            }
+
+            showProgress(show) {
+                const container = document.getElementById('progressContainer');
+                container.style.display = show ? 'block' : 'none';
+                if (!show) {
+                    this.updateProgress(0);
+                }
+            }
+
+            updateProgress(percent) {
+                const bar = document.getElementById('progressBar');
+                bar.style.width = percent + '%';
+            }
+
+            showStatus(message, type = 'info') {
+                const status = document.getElementById('status');
+                status.textContent = message;
+                status.className = 'status ' + type;
+                
+                setTimeout(() => {
+                    status.textContent = '';
+                    status.className = 'status';
+                }, 3000);
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new HilbertImageEncryptor();
+        });
+    </script>
+</body>
+</html>

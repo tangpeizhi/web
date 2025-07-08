@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hidden Word 🔒 - 隐藏文字工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        .mode-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .toggle-btn {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toggle-btn:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .toggle-btn:hover:before {
+            left: 100%;
+        }
+
+        .toggle-btn.active {
+            background: #4f46e5;
+            transform: scale(1.05);
+        }
+
+        .toggle-btn:not(.active) {
+            background: #9ca3af;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title:before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #6366f1;
+            border-radius: 2px;
+            margin-right: 10px;
+        }
+
+        .textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            line-height: 1.5;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+            background: #fafafa;
+        }
+
+        .textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .copy-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #059669;
+            transform: scale(1.05);
+        }
+
+        .result-section {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .emoji-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+            gap: 8px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f1f5f9;
+            border-radius: 12px;
+        }
+
+        .emoji-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .emoji-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .emoji-btn.selected {
+            background: #6366f1;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .preview-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+            
+            .emoji-selector {
+                grid-template-columns: repeat(auto-fit, minmax(35px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">Hidden Word 🔒</h1>
+            <p class="subtitle">将秘密信息隐藏在普通文本中</p>
+        </div>
+
+        <div class="mode-toggle">
+            <button class="toggle-btn active" onclick="switchMode('encode')">🔒 编码</button>
+            <button class="toggle-btn" onclick="switchMode('decode')">🔓 解码</button>
+        </div>
+
+        <div id="encodeMode">
+            <div class="section">
+                <div class="section-title">🔤 原始文本（载体文本）</div>
+                <textarea id="carrierText" class="textarea" placeholder="输入用来隐藏信息的普通文本，例如：你好，世界！"></textarea>
+            </div>
+
+            <div class="section">
+                <div class="section-title">🤫 要隐藏的文本</div>
+                <textarea id="secretText" class="textarea" placeholder="输入你想要隐藏的秘密信息"></textarea>
+            </div>
+
+            <div class="section">
+                <div class="section-title">😊 选择表情（可选）</div>
+                <div class="emoji-selector">
+                    <button class="emoji-btn" onclick="selectEmoji('😊')">😊</button>
+                    <button class="emoji-btn" onclick="selectEmoji('😂')">😂</button>
+                    <button class="emoji-btn" onclick="selectEmoji('😍')">😍</button>
+                    <button class="emoji-btn" onclick="selectEmoji('🤔')">🤔</button>
+                    <button class="emoji-btn" onclick="selectEmoji('😎')">😎</button>
+                    <button class="emoji-btn" onclick="selectEmoji('🥰')">🥰</button>
+                    <button class="emoji-btn" onclick="selectEmoji('😴')">😴</button>
+                    <button class="emoji-btn" onclick="selectEmoji('🍎')">🍎</button>
+                    <button class="emoji-btn" onclick="selectEmoji('🌟')">🌟</button>
+                    <button class="emoji-btn" onclick="selectEmoji('🎉')">🎉</button>
+                    <button class="emoji-btn" onclick="selectEmoji('🔥')">🔥</button>
+                    <button class="emoji-btn" onclick="selectEmoji('💖')">💖</button>
+                    <button class="emoji-btn" onclick="selectEmoji('🌈')">🌈</button>
+                    <button class="emoji-btn" onclick="selectEmoji('⭐')">⭐</button>
+                    <button class="emoji-btn" onclick="selectEmoji('🎈')">🎈</button>
+                    <button class="emoji-btn" onclick="selectEmoji('🎨')">🎨</button>
+                </div>
+            </div>
+
+            <button class="action-btn" onclick="encodeText()">🔒 生成隐藏文本</button>
+
+            <div id="encodeResult" class="result-section" style="display: none;">
+                <div class="section-title">🎯 编码结果</div>
+                <div class="preview-text">已将秘密信息隐藏在文本中</div>
+                <textarea id="encodedText" class="textarea" readonly></textarea>
+                <button class="copy-btn" onclick="copyToClipboard('encodedText')">📋 复制</button>
+            </div>
+        </div>
+
+        <div id="decodeMode" style="display: none;">
+            <div class="alert alert-info">
+                <strong>💡 提示：</strong> 粘贴包含隐藏信息的文本，工具会自动提取其中的秘密信息。
+            </div>
+
+            <div class="section">
+                <div class="section-title">🔍 要隐藏的文本</div>
+                <textarea id="hiddenText" class="textarea" placeholder="粘贴包含隐藏信息的文本"></textarea>
+            </div>
+
+            <button class="action-btn" onclick="decodeText()">🔓 解码文本</button>
+
+            <div id="decodeResult" class="result-section" style="display: none;">
+                <div class="section-title">✨ 解码结果</div>
+                <div class="preview-text">提取到的秘密信息</div>
+                <textarea id="decodedText" class="textarea" readonly></textarea>
+                <button class="copy-btn" onclick="copyToClipboard('decodedText')">📋 复制</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 零宽字符常量
+        const ZERO_WIDTH_CHARS = {
+            '0': '\u200B', // 零宽空格
+            '1': '\u200C', // 零宽非连接符
+            '2': '\u200D', // 零宽连接符
+            '3': '\uFEFF'  // 零宽非断空格
+        };
+
+        const CHAR_TO_ZERO_WIDTH = Object.fromEntries(
+            Object.entries(ZERO_WIDTH_CHARS).map(([k, v]) => [v, k])
+        );
+
+        let selectedEmoji = '';
+        let currentMode = 'encode';
+
+        // 切换模式
+        function switchMode(mode) {
+            currentMode = mode;
+            const encodeMode = document.getElementById('encodeMode');
+            const decodeMode = document.getElementById('decodeMode');
+            const toggleBtns = document.querySelectorAll('.toggle-btn');
+
+            if (mode === 'encode') {
+                encodeMode.style.display = 'block';
+                decodeMode.style.display = 'none';
+                toggleBtns[0].classList.add('active');
+                toggleBtns[1].classList.remove('active');
+            } else {
+                encodeMode.style.display = 'none';
+                decodeMode.style.display = 'block';
+                toggleBtns[0].classList.remove('active');
+                toggleBtns[1].classList.add('active');
+            }
+        }
+
+        // 选择表情
+        function selectEmoji(emoji) {
+            const emojiBtns = document.querySelectorAll('.emoji-btn');
+            emojiBtns.forEach(btn => btn.classList.remove('selected'));
+            
+            const selectedBtn = [...emojiBtns].find(btn => btn.textContent === emoji);
+            if (selectedBtn) {
+                selectedBtn.classList.add('selected');
+                selectedEmoji = emoji;
+            }
+        }
+
+        // 将文本转换为二进制
+        function textToBinary(text) {
+            return Array.from(new TextEncoder().encode(text))
+                .map(byte => byte.toString(2).padStart(8, '0'))
+                .join('');
+        }
+
+        // 将二进制转换为文本
+        function binaryToText(binary) {
+            const bytes = [];
+            for (let i = 0; i < binary.length; i += 8) {
+                const byte = binary.substr(i, 8);
+                if (byte.length === 8) {
+                    bytes.push(parseInt(byte, 2));
+                }
+            }
+            return new TextDecoder().decode(new Uint8Array(bytes));
+        }
+
+        // 将二进制转换为零宽字符
+        function binaryToZeroWidth(binary) {
+            let result = '';
+            for (let i = 0; i < binary.length; i += 2) {
+                const pair = binary.substr(i, 2);
+                const index = parseInt(pair, 2).toString();
+                result += ZERO_WIDTH_CHARS[index] || '';
+            }
+            return result;
+        }
+
+        // 将零宽字符转换为二进制
+        function zeroWidthToBinary(text) {
+            let binary = '';
+            for (let char of text) {
+                if (CHAR_TO_ZERO_WIDTH[char]) {
+                    const index = CHAR_TO_ZERO_WIDTH[char];
+                    binary += parseInt(index).toString(2).padStart(2, '0');
+                }
+            }
+            return binary;
+        }
+
+        // 编码文本
+        function encodeText() {
+            const carrierText = document.getElementById('carrierText').value;
+            const secretText = document.getElementById('secretText').value;
+
+            if (!carrierText.trim()) {
+                alert('请输入载体文本！');
+                return;
+            }
+
+            if (!secretText.trim()) {
+                alert('请输入要隐藏的秘密文本！');
+                return;
+            }
+
+            try {
+                // 将秘密文本转换为二进制
+                const binary = textToBinary(secretText);
+                
+                // 将二进制转换为零宽字符
+                const zeroWidthChars = binaryToZeroWidth(binary);
+                
+                // 将零宽字符嵌入到载体文本中
+                let result = '';
+                const carrierChars = Array.from(carrierText);
+                const hiddenCharsArray = Array.from(zeroWidthChars);
+                
+                // 随机分配零宽字符到载体文本的各个位置
+                let hiddenIndex = 0;
+                for (let i = 0; i < carrierChars.length && hiddenIndex < hiddenCharsArray.length; i++) {
+                    result += carrierChars[i];
+                    
+                    // 随机决定是否在这个位置插入零宽字符
+                    if (Math.random() > 0.3 && hiddenIndex < hiddenCharsArray.length) {
+                        result += hiddenCharsArray[hiddenIndex];
+                        hiddenIndex++;
+                    }
+                }
+                
+                // 添加剩余的零宽字符
+                while (hiddenIndex < hiddenCharsArray.length) {
+                    result += hiddenCharsArray[hiddenIndex];
+                    hiddenIndex++;
+                }
+                
+                // 如果选择了表情，添加到结果中
+                if (selectedEmoji) {
+                    result += ' ' + selectedEmoji;
+                }
+
+                document.getElementById('encodedText').value = result;
+                document.getElementById('encodeResult').style.display = 'block';
+                
+                showAlert('success', '✅ 编码成功！秘密信息已隐藏在文本中。');
+            } catch (error) {
+                alert('编码失败：' + error.message);
+            }
+        }
+
+        // 解码文本
+        function decodeText() {
+            const hiddenText = document.getElementById('hiddenText').value;
+
+            if (!hiddenText.trim()) {
+                alert('请输入包含隐藏信息的文本！');
+                return;
+            }
+
+            try {
+                // 提取零宽字符
+                let zeroWidthChars = '';
+                for (let char of hiddenText) {
+                    if (CHAR_TO_ZERO_WIDTH[char]) {
+                        zeroWidthChars += char;
+                    }
+                }
+
+                if (!zeroWidthChars) {
+                    alert('未检测到隐藏信息！');
+                    return;
+                }
+
+                // 将零宽字符转换为二进制
+                const binary = zeroWidthToBinary(zeroWidthChars);
+                
+                if (!binary) {
+                    alert('无法解析隐藏信息！');
+                    return;
+                }
+
+                // 将二进制转换为文本
+                const decodedText = binaryToText(binary);
+
+                document.getElementById('decodedText').value = decodedText;
+                document.getElementById('decodeResult').style.display = 'block';
+                
+                showAlert('success', '🔓 解码成功！已提取秘密信息。');
+            } catch (error) {
+                alert('解码失败：' + error.message);
+            }
+        }
+
+        // 复制到剪贴板
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            element.select();
+            element.setSelectionRange(0, 99999);
+            
+            try {
+                document.execCommand('copy');
+                showAlert('success', '📋 已复制到剪贴板！');
+            } catch (err) {
+                alert('复制失败，请手动复制');
+            }
+        }
+
+        // 显示提示信息
+        function showAlert(type, message) {
+            const existingAlert = document.querySelector('.alert-temp');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-temp`;
+            alert.textContent = message;
+            alert.style.position = 'fixed';
+            alert.style.top = '20px';
+            alert.style.right = '20px';
+            alert.style.zIndex = '1000';
+            alert.style.minWidth = '250px';
+            alert.style.animation = 'slideIn 0.3s ease-out';
+
+            document.body.appendChild(alert);
+
+            setTimeout(() => {
+                alert.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => alert.remove(), 300);
+            }, 3000);
+        }
+
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 初始化时选择第一个表情
+        window.addEventListener('load', () => {
+            selectEmoji('😊');
+        });
+    </script>
+</body>
+</html>
