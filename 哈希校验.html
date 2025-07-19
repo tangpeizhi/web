@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>哈希校验</title>
+    <style>
+        .hidden { display: none !important; }
+        .gradient-bg-blue { background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%); }
+        .gradient-bg-green { background: linear-gradient(135deg, #ecfdf5 0%, #dbeafe 100%); }
+        .gradient-bg-purple { background: linear-gradient(135deg, #faf5ff 0%, #fce7f3 100%); }
+        .card { background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }
+        .btn { padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 500; transition: all 0.2s; cursor: pointer; border: none; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-primary:disabled { background: #9ca3af; cursor: not-allowed; }
+        .btn-outline { background: transparent; border: 1px solid #d1d5db; color: #374151; }
+        .btn-outline:hover { background: #f9fafb; }
+        .btn-danger { color: #dc2626; border: 1px solid #fecaca; }
+        .btn-danger:hover { background: #fef2f2; }
+        .input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; }
+        .input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 0.75rem; border-radius: 0.375rem; }
+        .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 0.75rem; border-radius: 0.375rem; }
+        .icon { width: 1rem; height: 1rem; }
+        .icon-lg { width: 1.5rem; height: 1.5rem; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- 用户登录页面 -->
+    <div id="user-login-page" class="min-h-screen gradient-bg-blue flex items-center justify-center p-4">
+        <div class="card w-full max-w-md p-6">
+            <div class="text-center mb-6">
+                <div class="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                    <i data-lucide="lock" class="icon-lg text-blue-600"></i>
+                </div>
+                <h1 class="text-2xl font-bold mb-2">安全验证</h1>
+                <p class="text-gray-600">请输入密码以访问受保护的内容</p>
+            </div>
+            
+            <form id="user-login-form" class="space-y-4">
+                <div>
+                    <label for="user-password" class="block text-sm font-medium text-gray-700 mb-2">密码</label>
+                    <input type="password" id="user-password" class="input" placeholder="请输入密码" required>
+                </div>
+                
+                <div id="user-error" class="alert-error hidden"></div>
+                
+                <div class="space-y-2">
+                    <button type="submit" id="user-login-btn" class="btn btn-primary w-full">验证密码</button>
+                    <button type="button" id="admin-login-link" class="btn btn-outline w-full flex items-center justify-center gap-2">
+                        <i data-lucide="settings" class="icon"></i>
+                        管理员登录
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 管理员登录页面 -->
+    <div id="admin-login-page" class="min-h-screen gradient-bg-purple flex items-center justify-center p-4 hidden">
+        <div class="card w-full max-w-md p-6">
+            <div class="text-center mb-6">
+                <div class="mx-auto w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                    <i data-lucide="settings" class="icon-lg text-purple-600"></i>
+                </div>
+                <h1 class="text-2xl font-bold mb-2">管理员登录</h1>
+                <p class="text-gray-600">请输入管理员密码以访问管理后台</p>
+            </div>
+            
+            <form id="admin-login-form" class="space-y-4">
+                <div>
+                    <label for="admin-password" class="block text-sm font-medium text-gray-700 mb-2">管理员密码</label>
+                    <input type="password" id="admin-password" class="input" placeholder="请输入管理员密码" required>
+                </div>
+                
+                <div id="admin-error" class="alert-error hidden"></div>
+                
+                <div class="space-y-2">
+                    <button type="submit" id="admin-login-btn" class="btn btn-primary w-full">登录管理后台</button>
+                    <button type="button" id="back-to-user" class="btn btn-outline w-full">返回用户登录</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 用户成功页面 -->
+    <div id="user-success-page" class="min-h-screen gradient-bg-green flex items-center justify-center p-4 hidden">
+        <div class="card w-full max-w-md p-6">
+            <div class="text-center mb-6">
+                <div class="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                    <i data-lucide="unlock" class="icon-lg text-green-600"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-green-700 mb-2">访问已授权</h1>
+                <p class="text-gray-600">恭喜！您已成功通过密码验证</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 class="font-semibold text-green-800 mb-2">受保护的链接：</h3>
+                    <div id="protected-links" class="space-y-2">
+                        <!-- 链接将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                <button id="user-logout" class="btn btn-outline w-full">退出登录</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理员面板 -->
+    <div id="admin-panel-page" class="min-h-screen gradient-bg-purple p-4 hidden">
+        <div class="max-w-4xl mx-auto space-y-6">
+            <!-- 头部 -->
+            <div class="card p-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                            <i data-lucide="settings" class="icon text-purple-600"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold">管理后台</h1>
+                            <p class="text-gray-600">管理密码和受保护的链接</p>
+                        </div>
+                    </div>
+                    <button id="admin-logout" class="btn btn-outline">退出管理</button>
+                </div>
+            </div>
+
+            <!-- 成功消息 -->
+            <div id="admin-message" class="alert-success hidden"></div>
+
+            <!-- 密码管理 -->
+            <div class="card p-6">
+                <div class="mb-4">
+                    <h2 class="text-xl font-bold flex items-center gap-2 mb-2">
+                        <i data-lucide="eye" class="icon"></i>
+                        密码管理
+                    </h2>
+                    <p class="text-gray-600">修改用户密码和管理员密码</p>
+                </div>
+
+                <div class="mb-4">
+                    <button id="toggle-hash" class="btn btn-outline flex items-center gap-2">
+                        <i data-lucide="eye" class="icon"></i>
+                        显示哈希值
+                    </button>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- 用户密码 -->
+                    <div class="space-y-3">
+                        <label class="block text-base font-semibold">用户密码</label>
+                        <div id="user-hash" class="p-2 bg-gray-50 rounded text-xs font-mono break-all hidden"></div>
+                        <div class="flex gap-2">
+                            <input type="password" id="new-user-password" class="input" placeholder="输入新的用户密码">
+                            <button id="update-user-password" class="btn btn-primary">
+                                <i data-lucide="save" class="icon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 管理员密码 -->
+                    <div class="space-y-3">
+                        <label class="block text-base font-semibold">管理员密码</label>
+                        <div id="admin-hash" class="p-2 bg-gray-50 rounded text-xs font-mono break-all hidden"></div>
+                        <div class="flex gap-2">
+                            <input type="password" id="new-admin-password" class="input" placeholder="输入新的管理员密码">
+                            <button id="update-admin-password" class="btn btn-primary">
+                                <i data-lucide="save" class="icon"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 链接管理 -->
+            <div class="card p-6">
+                <div class="mb-4">
+                    <h2 class="text-xl font-bold flex items-center gap-2 mb-2">
+                        <i data-lucide="external-link" class="icon"></i>
+                        链接管理
+                    </h2>
+                    <p class="text-gray-600">管理受保护的链接</p>
+                </div>
+
+                <!-- 添加新链接 -->
+                <div class="p-4 border rounded-lg bg-gray-50 mb-4">
+                    <label class="block text-base font-semibold mb-3">添加新链接</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="new-link-name" class="input" placeholder="链接名称">
+                        <input type="url" id="new-link-url" class="input" placeholder="链接地址 (https://...)">
+                        <button id="add-link" class="btn btn-primary">
+                            <i data-lucide="plus" class="icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 现有链接列表 -->
+                <div class="space-y-2">
+                    <label class="block text-base font-semibold">现有链接 (<span id="link-count">0</span>)</label>
+                    <div id="links-list" class="space-y-2">
+                        <!-- 链接将通过JavaScript动态生成 -->
+                    </div>
+                    <div id="no-links" class="text-center py-8 text-gray-500 hidden">暂无受保护的链接</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 应用状态
+        let currentPage = 'user-login';
+        let settings = {
+            userPasswordHash: "",
+            adminPasswordHash: "",
+            protectedLinks: [
+                { id: "1", name: "Google 搜索", url: "https://www.google.com" },
+                { id: "2", name: "GitHub", url: "https://github.com" },
+                { id: "3", name: "Stack Overflow", url: "https://stackoverflow.com" }
+            ]
+        };
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', async function() {
+            lucide.createIcons();
+            
+            // 计算正确的哈希值
+            const correctHash = await calculateHash("tpzlovelbb");
+            settings.userPasswordHash = correctHash;
+            settings.adminPasswordHash = correctHash;
+            
+            loadSettings();
+            setupEventListeners();
+            showPage('user-login');
+        });
+
+        // 加载设置
+        function loadSettings() {
+            const saved = localStorage.getItem('adminSettings');
+            if (saved) {
+                const savedSettings = JSON.parse(saved);
+                // 只加载链接，密码使用默认值
+                settings.protectedLinks = savedSettings.protectedLinks || settings.protectedLinks;
+            }
+        }
+
+        // 保存设置
+        function saveSettings() {
+            localStorage.setItem('adminSettings', JSON.stringify(settings));
+            showMessage('设置已保存！');
+        }
+
+        // 计算SHA-256哈希
+        async function calculateHash(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // 显示页面
+        function showPage(page) {
+            // 隐藏所有页面
+            document.querySelectorAll('[id$="-page"]').forEach(el => el.classList.add('hidden'));
+            
+            // 显示目标页面
+            document.getElementById(page + '-page').classList.remove('hidden');
+            currentPage = page;
+
+            // 更新页面内容
+            if (page === 'user-success') {
+                updateProtectedLinks();
+            } else if (page === 'admin-panel') {
+                updateAdminPanel();
+            }
+        }
+
+        // 显示消息
+        function showMessage(message) {
+            const messageEl = document.getElementById('admin-message');
+            messageEl.textContent = message;
+            messageEl.classList.remove('hidden');
+            setTimeout(() => messageEl.classList.add('hidden'), 3000);
+        }
+
+        // 显示错误
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+            setTimeout(() => errorEl.classList.add('hidden'), 5000);
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 用户登录
+            document.getElementById('user-login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const password = document.getElementById('user-password').value;
+                const btn = document.getElementById('user-login-btn');
+                
+                btn.textContent = '验证中...';
+                btn.disabled = true;
+
+                try {
+                    const hash = await calculateHash(password);
+                    if (hash === settings.userPasswordHash) {
+                        showPage('user-success');
+                    } else {
+                        showError('user-error', '密码错误，请重试');
+                    }
+                } catch (err) {
+                    showError('user-error', '验证过程中出现错误');
+                } finally {
+                    btn.textContent = '验证密码';
+                    btn.disabled = false;
+                }
+            });
+
+            // 管理员登录
+            document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const password = document.getElementById('admin-password').value;
+                const btn = document.getElementById('admin-login-btn');
+                
+                btn.textContent = '验证中...';
+                btn.disabled = true;
+
+                try {
+                    const hash = await calculateHash(password);
+                    if (hash === settings.adminPasswordHash) {
+                        showPage('admin-panel');
+                    } else {
+                        showError('admin-error', '管理员密码错误，请重试');
+                    }
+                } catch (err) {
+                    showError('admin-error', '验证过程中出现错误');
+                } finally {
+                    btn.textContent = '登录管理后台';
+                    btn.disabled = false;
+                }
+            });
+
+            // 页面切换
+            document.getElementById('admin-login-link').addEventListener('click', () => showPage('admin-login'));
+            document.getElementById('back-to-user').addEventListener('click', () => showPage('user-login'));
+            document.getElementById('user-logout').addEventListener('click', () => {
+                document.getElementById('user-password').value = '';
+                showPage('user-login');
+            });
+            document.getElementById('admin-logout').addEventListener('click', () => {
+                document.getElementById('admin-password').value = '';
+                showPage('user-login');
+            });
+
+            // 管理员面板功能
+            document.getElementById('toggle-hash').addEventListener('click', toggleHashDisplay);
+            document.getElementById('update-user-password').addEventListener('click', updateUserPassword);
+            document.getElementById('update-admin-password').addEventListener('click', updateAdminPassword);
+            document.getElementById('add-link').addEventListener('click', addLink);
+        }
+
+        // 更新受保护链接显示
+        function updateProtectedLinks() {
+            const container = document.getElementById('protected-links');
+            container.innerHTML = '';
+
+            settings.protectedLinks.forEach(link => {
+                const linkEl = document.createElement('a');
+                linkEl.href = link.url;
+                linkEl.target = '_blank';
+                linkEl.rel = 'noopener noreferrer';
+                linkEl.className = 'flex items-center gap-2 text-blue-600 hover:text-blue-800 underline';
+                linkEl.innerHTML = `
+                    <i data-lucide="external-link" class="icon"></i>
+                    ${link.name}
+                `;
+                container.appendChild(linkEl);
+            });
+
+            lucide.createIcons();
+        }
+
+        // 更新管理员面板
+        function updateAdminPanel() {
+            updateHashDisplay();
+            updateLinksList();
+        }
+
+        // 切换哈希显示
+        function toggleHashDisplay() {
+            const btn = document.getElementById('toggle-hash');
+            const userHash = document.getElementById('user-hash');
+            const adminHash = document.getElementById('admin-hash');
+            
+            if (userHash.classList.contains('hidden')) {
+                userHash.classList.remove('hidden');
+                adminHash.classList.remove('hidden');
+                btn.innerHTML = '<i data-lucide="eye-off" class="icon"></i> 隐藏哈希值';
+            } else {
+                userHash.classList.add('hidden');
+                adminHash.classList.add('hidden');
+                btn.innerHTML = '<i data-lucide="eye" class="icon"></i> 显示哈希值';
+            }
+            lucide.createIcons();
+        }
+
+        // 更新哈希显示
+        function updateHashDisplay() {
+            document.getElementById('user-hash').textContent = settings.userPasswordHash;
+            document.getElementById('admin-hash').textContent = settings.adminPasswordHash;
+        }
+
+        // 更新用户密码
+        async function updateUserPassword() {
+            const password = document.getElementById('new-user-password').value.trim();
+            if (!password) return;
+
+            const hash = await calculateHash(password);
+            settings.userPasswordHash = hash;
+            saveSettings();
+            updateHashDisplay();
+            document.getElementById('new-user-password').value = '';
+        }
+
+        // 更新管理员密码
+        async function updateAdminPassword() {
+            const password = document.getElementById('new-admin-password').value.trim();
+            if (!password) return;
+
+            const hash = await calculateHash(password);
+            settings.adminPasswordHash = hash;
+            saveSettings();
+            updateHashDisplay();
+            document.getElementById('new-admin-password').value = '';
+        }
+
+        // 添加链接
+        function addLink() {
+            const name = document.getElementById('new-link-name').value.trim();
+            const url = document.getElementById('new-link-url').value.trim();
+            
+            if (!name || !url) return;
+
+            const link = {
+                id: Date.now().toString(),
+                name: name,
+                url: url
+            };
+
+            settings.protectedLinks.push(link);
+            saveSettings();
+            updateLinksList();
+            
+            document.getElementById('new-link-name').value = '';
+            document.getElementById('new-link-url').value = '';
+        }
+
+        // 删除链接
+        function deleteLink(id) {
+            settings.protectedLinks = settings.protectedLinks.filter(link => link.id !== id);
+            saveSettings();
+            updateLinksList();
+        }
+
+        // 更新链接列表
+        function updateLinksList() {
+            const container = document.getElementById('links-list');
+            const noLinks = document.getElementById('no-links');
+            const count = document.getElementById('link-count');
+            
+            container.innerHTML = '';
+            count.textContent = settings.protectedLinks.length;
+
+            if (settings.protectedLinks.length === 0) {
+                noLinks.classList.remove('hidden');
+            } else {
+                noLinks.classList.add('hidden');
+                
+                settings.protectedLinks.forEach(link => {
+                    const linkEl = document.createElement('div');
+                    linkEl.className = 'flex items-center gap-3 p-3 border rounded-lg';
+                    linkEl.innerHTML = `
+                        <i data-lucide="external-link" class="icon text-blue-600"></i>
+                        <div class="flex-1">
+                            <div class="font-medium">${link.name}</div>
+                            <div class="text-sm text-gray-500">${link.url}</div>
+                        </div>
+                        <button onclick="deleteLink('${link.id}')" class="btn btn-danger">
+                            <i data-lucide="trash-2" class="icon"></i>
+                        </button>
+                    `;
+                    container.appendChild(linkEl);
+                });
+            }
+
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
